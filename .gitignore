@@ -3,7 +3,11 @@
 .idea
 __pycatche__
 *.csv
-
+*.npy
+*.pt
+*.pkl
+*.ckpt
+*.yaml
 
 classification/__pycache__/*.pyc
 

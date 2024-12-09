@@ -180,7 +180,8 @@ class MultiPartitioningClassifier(pl.LightningModule):
             self.log(metric_name, metric_value, logger=True)
 
     def _multi_crop_inference(self, batch):
-        images, meta_batch = batch
+        # images, meta_batch = batch
+        images = batch
 
         cur_batch_size = images.shape[0]
         ncrops = images.shape[1]
@@ -188,21 +189,12 @@ class MultiPartitioningClassifier(pl.LightningModule):
         # reshape crop dimension to batch
         images = torch.reshape(images, (cur_batch_size * ncrops, *images.shape[2:]))
 
-        print('Image shape - ',images.shape)
 
         # forward pass
         yhats = self(images)
-        print('yhats zero -',(yhats[0].shape))
-        print('yhats first -', (yhats[1].shape))
-        print('yhats second -', (yhats[2].shape))
+
 
         yhats = [torch.nn.functional.softmax(yhat, dim=1) for yhat in yhats]
-        print('yhats len -', len(yhats))
-
-        print('yhats zero -',(yhats[0].shape))
-        print('yhats first -', (yhats[1].shape))
-        print('yhats second -', (yhats[2].shape))
-
 
         # respape back to access individual crops
         yhats = [
@@ -215,7 +207,6 @@ class MultiPartitioningClassifier(pl.LightningModule):
 
         hierarchy_preds = None
 
-        print('hierarchy',self.hierarchy)
         if self.hierarchy is not None:
             hierarchy_logits = torch.stack(
                 [yhat[:, self.hierarchy.M[:, i]] for i, yhat in enumerate(yhats)],
@@ -223,11 +214,11 @@ class MultiPartitioningClassifier(pl.LightningModule):
             )
             hierarchy_preds = torch.prod(hierarchy_logits, dim=-1)
 
-        return yhats, meta_batch, hierarchy_preds
+        return yhats, hierarchy_preds
 
     def inference(self, batch):
 
-        yhats, meta_batch, hierarchy_preds = self._multi_crop_inference(batch)
+        yhats, hierarchy_preds = self._multi_crop_inference(batch)
 
         if self.hierarchy is not None:
             nparts = len(self.partitionings) + 1
@@ -237,7 +228,6 @@ class MultiPartitioningClassifier(pl.LightningModule):
         pred_class_dict = {}
         pred_lat_dict = {}
         pred_lng_dict = {}
-        print('print n parts - ',(nparts))
         for i in range(nparts):
             # get pred class indices
             if self.hierarchy is not None and i == len(self.partitionings):
@@ -264,7 +254,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
             pred_lng_dict[pname] = pred_lngs
             pred_class_dict[pname] = pred_classes
 
-        return meta_batch["img_path"], pred_class_dict, pred_lat_dict, pred_lng_dict
+        return pred_class_dict, pred_lat_dict, pred_lng_dict
 
     def test_step(self, batch, batch_idx, dataloader_idx=None):
 

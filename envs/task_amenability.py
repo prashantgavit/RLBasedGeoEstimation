@@ -80,7 +80,7 @@ class TaskAmenability(gym.Env):
             else:
                 moving_avg = self.compute_moving_avg()
                 
-                self.task_predictor.fit(x_train_selected, y_train_selected, batch_size=self.task_predictor_batch_size, epochs=self.epochs_per_batch, shuffle=True, verbose=0)
+                # self.task_predictor.fit(x_train_selected, y_train_selected, batch_size=self.task_predictor_batch_size, epochs=self.epochs_per_batch, shuffle=True, verbose=0)
                 
                 val_acc_vec = self.get_val_acc_vec()
                 val_sel_vec = self.actions_list[self.controller_batch_size:]
