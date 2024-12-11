@@ -39,8 +39,8 @@ class TaskAmenability(gym.Env):
         
     def get_batch(self):
         shuffle_inds = np.random.permutation(len(self.y_train))
-        self.x_train, self.y_train = self.x_train[shuffle_inds], self.y_train[shuffle_inds]
-        return self.x_train[:self.controller_batch_size], self.y_train[:self.controller_batch_size]
+        self.x_train, self.y_train = self.x_train[shuffle_inds,...], list(np.array(self.y_train)[shuffle_inds])
+        return self.x_train[:self.controller_batch_size,...], self.y_train[:self.controller_batch_size]
 
     def compute_moving_avg(self):
         self.val_metric_list = self.val_metric_list[-10:]
@@ -56,7 +56,7 @@ class TaskAmenability(gym.Env):
     def get_val_acc_vec(self):
         val_acc_vec = []
         for i in range(len(self.y_val)):
-            metrics = self.task_predictor.evaluate(self.x_val[i:i+1], self.y_val[i:i+1], verbose=0)
+            metrics = self.task_predictor.evaluate(self.x_val[i:i+1,:], self.y_val[i:i+1], verbose=0)
             val_metric = metrics[-1]
             val_acc_vec.append(val_metric)
         return np.array(val_acc_vec)
